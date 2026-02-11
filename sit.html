@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة شِفاء الموحدة | حجز المواعيد الطبية</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loader"><div class="spin"></div></div>
+
+<div class="overlay">
+    <nav>
+        <div class="brand"><i class="fas fa-hand-holding-medical"></i> <span>نِظام شِفاء</span></div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div id="lang-selector" style="position: relative;">
+                <i class="fas fa-globe" style="cursor: pointer; font-size: 1.4rem; color: var(--p-color);" onclick="toggleLangMenu()" title="اختر اللغة"></i>
+                <div id="lang-menu" style="display: none; position: absolute; top: 45px; left: 0; background: var(--glass); border: 2px solid var(--p-color); border-radius: 15px; min-width: 150px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;">
+                    <button onclick="setLanguage('ar')" class="lang-btn">العربية ع</button>
+                    <button onclick="setLanguage('en')" class="lang-btn">English En</button>
+                    <button onclick="setLanguage('fr')" class="lang-btn">Français Fr</button>
+                </div>
+            </div>
+            <i class="fas fa-circle-half-stroke" style="cursor: pointer; font-size: 1.4rem;" onclick="toggleTheme()"></i>
+        </div>
+    </nav>
+
+    <main class="search-container" id="home-sec">
+        <div class="search-card">
+            <h1 style="margin: 0 0 10px 0; color: var(--p-dark);" data-i18n="title">احجز مستقبلك الصحي اليوم</h1>
+            <p style="opacity: 0.6;" data-i18n="subtitle">البوابة الوطنية الرقمية لربط المرضى بالمؤسسات الاستشفائية</p>
+            
+            <div class="input-wrap">
+                <label data-i18n="selectHospital">اختر المستشفى أو المركز الطبي:</label>
+                <i class="fas fa-search-location"></i>
+                <input type="text" id="h-input" onkeyup="filterHosp()" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث باسم المستشفى أو الولاية...">
+                <div id="h-results" class="hosp-list"></div>
+            </div>
+
+            <div style="margin: 35px 0; display: flex; align-items: center; gap: 15px;">
+                <hr style="flex:1; opacity: 0.1;"> <span style="font-size: 0.85rem; opacity: 0.5;" data-i18n="or">أو استعلم عن موعدك</span> <hr style="flex:1; opacity: 0.1;">
+            </div>
+
+            <div class="input-wrap">
+                <i class="fas fa-phone-volume"></i>
+                <input type="tel" id="track-id" data-i18n-placeholder="trackPhone" placeholder="رقم الهاتف المسجل للحجز...">
+            </div>
+            <button class="action-btn" onclick="trackBooking()"><i class="fas fa-microchip"></i> <span data-i18n="trackBtn">استرجاع بيانات الحجز</span></button>
+        </div>
+    </main>
+
+    <section class="booking-grid" id="book-sec">
+        <div class="hospital-header-center">
+            <h2 id="current-hosp" style="margin:0; color: var(--p-dark);"></h2>
+            <small style="opacity:0.6;">المؤسسة المختارة لإجراء الفحص</small>
+        </div>
+
+        <div class="card-service" id="c-clinic" onclick="expandForm('clinic')">
+            <i class="fas fa-user-md" style="font-size: 4rem; color: var(--s-color); margin-bottom: 20px;"></i>
+            <h3 data-i18n="clinicTitle">موعد طبيب أخصائي</h3>
+            <p data-i18n="clinicDesc">للمراجعات الدورية والفحوصات التخصصية</p>
+            
+            <div id="form-clinic" class="form-area" onclick="event.stopPropagation()">
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <input type="text" id="p-fn" data-i18n-placeholder="firstName" placeholder="الاسم">
+                    <input type="text" id="p-ln" data-i18n-placeholder="lastName" placeholder="اللقب">
+                </div>
+                <div class="input-wrap" style="margin-top:0;">
+                    <label data-i18n="nin">رقم التعريف الوطني (NIN):</label>
+                    <input type="number" id="p-nin" placeholder="أدخل الرقم المكون من 18 خانة" style="padding: 12px 15px;">
+                </div>
+                <div class="input-wrap">
+                    <label data-i18n="phone">رقم هاتف المريض:</label>
+                    <input type="tel" id="p-tel" placeholder="06XXXXXXXX" style="padding: 12px 15px;">
+                </div>
+                <select id="p-spec" style="margin: 15px 0;"></select>
+                <input type="date" id="p-date" style="margin-bottom: 20px;">
+                
+                <div class="btn-group">
+                    <button class="action-btn" onclick="confirmFinal('clinic')" style="flex:2;"><span data-i18n="confirmBtn">تثبيت الموعد</span></button>
+                    <button class="action-btn btn-cancel" onclick="resetView()" style="flex:1;">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-service" id="c-home" onclick="expandForm('home')">
+            <i class="fas fa-house-chimney-medical" style="font-size: 4rem; color: var(--p-color); margin-bottom: 20px;"></i>
+            <h3 data-i18n="homeTitle">الرعاية المنزلية</h3>
+            <p data-i18n="homeDesc">طلب طاقم طبي لزيارة المريض في منزله</p>
+            
+            <div id="form-home" class="form-area" onclick="event.stopPropagation()">
+                <input type="text" id="h-name" data-i18n-placeholder="patientName" placeholder="الاسم الكامل للمريض" style="margin-bottom: 12px;">
+                <input type="tel" id="h-tel" data-i18n-placeholder="guardianPhone" placeholder="رقم هاتف ولي الأمر" style="margin-bottom: 12px;">
+                <textarea id="h-case" rows="3" data-i18n-placeholder="caseDesc" placeholder="وصف موجز للحالة الصحية الحالية..."></textarea>
+                <input type="text" id="h-addr" data-i18n-placeholder="address" placeholder="العنوان السكني التفصيلي" style="margin: 15px 0;">
+                
+                <div class="btn-group">
+                    <button class="action-btn" style="background: var(--p-color); flex:2;" onclick="confirmFinal('home')"><span data-i18n="submitBtn">إرسال الطلب</span></button>
+                    <button class="action-btn btn-cancel" onclick="resetView()" style="flex:1;">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="fab fab-ai" onclick="toggleAI()"><i class="fas fa-robot"></i></div>
+<div class="fab fab-em" onclick="toggleEM()"><i class="fas fa-ambulance"></i></div>
+
+<div id="ai-win" class="ai-panel">
+    <div class="chat-top"><span>🤖 مساعد شفاء الذكي</span><i class="fas fa-times" onclick="toggleAI()" style="cursor:pointer;"></i></div>
+    <div class="chat-mid" id="chat-logs"><div class="bubble b-bot"></div></div>
+    <div class="chat-bottom">
+        <input type="text" id="ai-input" placeholder="اكتب سؤالك..." autocomplete="off">
+        <button onclick="askAI()" class="ai-send-btn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<div id="m-em" class="modal-full" onclick="toggleEM()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <h2 style="color:var(--d-color);"><i class="fas fa-heart-pulse"></i> الاستجابة السريعة</h2>
+        <div id="tip-display" class="tip-card"></div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="tel:14" class="emergency-link em-fire"><span>الحماية المدنية</span><span>14 🚒</span></a>
+            <a href="tel:115" class="emergency-link em-med"><span>الإسعاف الطبي</span><span>115 🚑</span></a>
+        </div>
+        <button onclick="toggleEM()" style="margin-top:20px; background:none; border:none; color:#888; cursor:pointer;">إغلاق</button>
+    </div>
+</div>
+
+<div id="m-qr" class="modal-full">
+    <div class="modal-box">
+        <h2 style="color:var(--p-color);">اكتمل الحجز بنجاح!</h2>
+        <div id="qr-target" style="display:flex; justify-content:center; margin:25px 0;"></div>
+        <p id="ref-num" style="font-weight:900; font-size:1.5rem; color:var(--s-color);"></p>
+        <button class="action-btn" style="background:var(--d-color);" onclick="location.reload()">إغلاق</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
