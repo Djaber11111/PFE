@@ -1,4 +1,11 @@
-// --- القواميس والبيانات ---
+// --- 1. إعدادات الاتصال بـ Supabase ---
+const SUPABASE_URL = 'https://ughfltzaroqgqgeipksb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnaGZsdHphcm9xZ3FnZWlwa3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzI3MzMsImV4cCI6MjA4NTM0ODczM30.TZvvGWPab7GM1G2ObIsiBoPUNs0KBFdkkUtIug8NJyE';
+
+// تعريف العميل للتعامل مع قاعدة البيانات
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// --- 2. القواميس والبيانات ---
 const translations = {
     ar: {
         title: "احجز مستقبلك الصحي اليوم",
@@ -25,7 +32,7 @@ const TIPS = ["اشرب الماء بكثرة", "الرياضة تحمي الق�
 
 let currentLang = 'ar';
 
-// --- وظائف اللغة والتنسيق ---
+// --- 3. وظائف اللغة والتنسيق ---
 function toggleLangMenu() {
     const m = document.getElementById('lang-menu');
     m.style.display = m.style.display === 'none' ? 'block' : 'none';
@@ -34,7 +41,6 @@ function toggleLangMenu() {
 function setLanguage(lang) {
     currentLang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    // تحديث النصوص (بشكل مبسط للعرض)
     document.querySelector('[data-i18n="title"]').textContent = translations[lang].title;
     document.getElementById('lang-menu').style.display = 'none';
     updateSpecs();
@@ -44,15 +50,15 @@ function updateSpecs() {
     const s = document.getElementById('p-spec');
     if(!s) return;
     s.innerHTML = `<option value="">${translations[currentLang].specialty}</option>
-                   <option value="1">${translations[currentLang].spec_gen}</option>
-                   <option value="2">${translations[currentLang].spec_heart}</option>`;
+                   <option value="general">${translations[currentLang].spec_gen}</option>
+                   <option value="heart">${translations[currentLang].spec_heart}</option>`;
 }
 
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
 }
 
-// --- وظائف البحث والاختيار ---
+// --- 4. وظائف البحث والاختيار ---
 function filterHosp() {
     const v = document.getElementById('h-input').value;
     const res = document.getElementById('h-results');
@@ -76,7 +82,7 @@ function selectHosp(name) {
     }});
 }
 
-// --- التوسيع والإلغاء ---
+// --- 5. التوسيع والإلغاء ---
 function expandForm(type) {
     const c = document.getElementById('c-clinic');
     const h = document.getElementById('c-home');
@@ -93,28 +99,63 @@ function expandForm(type) {
     }
 }
 
-function resetView() {
-    // إخفاء النماذج
-    document.getElementById('form-clinic').style.display = 'none';
-    document.getElementById('form-home').style.display = 'none';
-    
-    // إعادة عرض البطاقات بشكلها الأصلي
-    const cards = [document.getElementById('c-clinic'), document.getElementById('c-home')];
-    cards.forEach(card => {
-        card.style.display = 'block';
-        card.style.width = '350px';
-    });
+// --- 6. منطق الحجز والاتصال بقاعدة البيانات ---
+async function confirmFinal(type) {
+    if (!supabaseClient) {
+        alert("خطأ: لم يتم تهيئة الاتصال بقاعدة البيانات.");
+        return;
+    }
+
+    const hospitalName = document.getElementById('current-hosp').innerText;
+    const bookingCode = "SHIFA-" + Math.floor(Math.random() * 9000 + 1000);
+
+    try {
+        if (type === 'clinic') {
+            // إرسال بيانات الموعد إلى جدول appointments
+            const { error } = await supabaseClient
+                .from('appointments')
+                .insert([{
+                    hospital_name: hospitalName,
+                    specialty: document.getElementById('p-spec').value,
+                    appointment_date: document.getElementById('p-date').value || new Date().toISOString(),
+                    booking_code: bookingCode,
+                    status: 'pending'
+                }]);
+
+            if (error) throw error;
+        } else {
+            // إرسال طلب الرعاية المنزلية إلى جدول homecare_requests
+            const { error } = await supabaseClient
+                .from('homecare_requests')
+                .insert([{
+                    patient_name: document.getElementById('h-name').value,
+                    phone: document.getElementById('h-tel').value,
+                    address: document.getElementById('h-addr').value,
+                    medical_condition: document.getElementById('h-case').value,
+                    status: 'pending'
+                }]);
+
+            if (error) throw error;
+        }
+
+        // عرض نافذة النجاح مع رمز QR
+        showSuccessModal(bookingCode);
+    } catch (err) {
+        console.error("خطأ أثناء الحجز:", err);
+        alert("فشل الحجز: " + err.message);
+    }
 }
 
-// --- الحجز والطوارئ ---
-function confirmFinal(type) {
-    const code = "SHIFA-" + Math.floor(Math.random()*9000 + 1000);
+function showSuccessModal(code) {
     document.getElementById('m-qr').style.display = 'flex';
     document.getElementById('ref-num').textContent = code;
     document.getElementById('qr-target').innerHTML = '';
-    new QRCode(document.getElementById("qr-target"), { text: code, width: 150, height: 150 });
+    if (typeof QRCode !== 'undefined') {
+        new QRCode(document.getElementById("qr-target"), { text: code, width: 150, height: 150 });
+    }
 }
 
+// --- 7. وظائف المساعد الذكي والطوارئ ---
 function toggleAI() {
     const w = document.getElementById('ai-win');
     w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
@@ -124,11 +165,15 @@ function askAI() {
     const inp = document.getElementById('ai-input');
     if(!inp.value) return;
     const log = document.getElementById('chat-logs');
+    
     const u = document.createElement('div');
     u.className = 'bubble b-user';
     u.textContent = inp.value;
     log.appendChild(u);
+    
+    const userQuery = inp.value;
     inp.value = '';
+    
     setTimeout(() => {
         const b = document.createElement('div');
         b.className = 'bubble b-bot';
@@ -146,8 +191,11 @@ function toggleEM() {
     }
 }
 
-// --- عند التحميل ---
+// --- 8. عند تحميل الصفحة ---
 window.onload = () => {
     updateSpecs();
-    setTimeout(() => document.getElementById('loader').style.display = 'none', 600);
+    setTimeout(() => {
+        const loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'none';
+    }, 600);
 };
