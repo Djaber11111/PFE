@@ -2,9 +2,10 @@
 // تأكد من وضع قيمك الحقيقية هنا
 // القيم المستخرجة من الصور الخاصة بك
 // الرابط المستخرج من الصورة الأولى
+// تأكد أن الرابط ينتهي بـ .co ولا يوجد بعده /
 const SB_URL = "https://ughfltzaroqgqeipksb.supabase.co"; 
 
-// المفتاح المستخرج من الصورة الثانية (Publishable key)
+// انسخ هذا المفتاح بالكامل كما هو (هذا هو المفتاح الظاهر في صورتك)
 const SB_KEY = "sb_publishable_jjuVXyR7sfZhrwV7KippqA_IwM62X9659A1H5pAnG9n6LCHVjPjYn85mG8z2NfD697b0a70f3f2e";
 let supabaseClient; // تم تغيير الاسم لتجنب التعارض مع اسم المكتبة
 
