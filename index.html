@@ -1,146 +1,112 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة شِفاء الموحدة | حجز المواعيد الطبية</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+:root {
+    --p-color: #00b894; --p-dark: #00897b;
+    --s-color: #0984e3; --a-color: #6c5ce7;
+    --d-color: #d63031; --bg-main: #f5f6fa;
+    --text-p: #2d3436; --glass: rgba(255, 255, 255, 0.9);
+    --border: rgba(0, 0, 0, 0.08);
+    --tip-bg: #fff9db; --tip-txt: #856404;
+}
 
-<div id="loader"><div class="spin"></div></div>
+.dark-mode {
+    --bg-main: #0f141e; --text-p: #f5f6fa;
+    --glass: rgba(25, 30, 45, 0.95);
+    --border: rgba(255, 255, 255, 0.1);
+    --tip-bg: #2d2d14; --tip-txt: #f1c40f;
+    --s-color: #74b9ff;
+}
 
-<div class="overlay">
-    <nav>
-        <div class="brand"><i class="fas fa-hand-holding-medical"></i> <span>نِظام شِفاء</span></div>
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <div id="lang-selector" style="position: relative;">
-                <i class="fas fa-globe" style="cursor: pointer; font-size: 1.4rem; color: var(--p-color);" onclick="toggleLangMenu()" title="اختر اللغة"></i>
-                <div id="lang-menu" style="display: none; position: absolute; top: 45px; left: 0; background: var(--glass); border: 2px solid var(--p-color); border-radius: 15px; min-width: 150px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;">
-                    <button onclick="setLanguage('ar')" class="lang-btn">العربية ع</button>
-                    <button onclick="setLanguage('en')" class="lang-btn">English En</button>
-                    <button onclick="setLanguage('fr')" class="lang-btn">Français Fr</button>
-                </div>
-            </div>
-            <i class="fas fa-circle-half-stroke" style="cursor: pointer; font-size: 1.4rem;" onclick="toggleTheme()"></i>
-        </div>
-    </nav>
+* { box-sizing: border-box; transition: all 0.3s ease; }
 
-    <main class="search-container" id="home-sec">
-        <div class="search-card">
-            <h1 style="margin: 0 0 10px 0; color: var(--p-dark);" data-i18n="title">احجز مستقبلك الصحي اليوم</h1>
-            <p style="opacity: 0.6;" data-i18n="subtitle">البوابة الوطنية الرقمية لربط المرضى بالمؤسسات الاستشفائية</p>
-            
-            <div class="input-wrap">
-                <label data-i18n="selectHospital">اختر المستشفى أو المركز الطبي:</label>
-                <i class="fas fa-search-location"></i>
-                <input type="text" id="h-input" onkeyup="filterHosp()" data-i18n-placeholder="searchPlaceholder" placeholder="ابحث باسم المستشفى أو الولاية...">
-                <div id="h-results" class="hosp-list"></div>
-            </div>
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0; min-height: 100vh; color: var(--text-p);
+    background: #eee; overflow-x: hidden;
+}
 
-            <div style="margin: 35px 0; display: flex; align-items: center; gap: 15px;">
-                <hr style="flex:1; opacity: 0.1;"> <span style="font-size: 0.85rem; opacity: 0.5;" data-i18n="or">أو استعلم عن موعدك</span> <hr style="flex:1; opacity: 0.1;">
-            </div>
+.overlay {
+    background: rgba(245, 246, 250, 0.8);
+    min-height: 100vh; width: 100%; backdrop-filter: blur(10px);
+    display: flex; flex-direction: column;
+}
 
-            <div class="input-wrap">
-                <i class="fas fa-phone-volume"></i>
-                <input type="tel" id="track-id" data-i18n-placeholder="trackPhone" placeholder="رقم الهاتف المسجل للحجز...">
-            </div>
-            <button class="action-btn" onclick="trackBooking()"><i class="fas fa-microchip"></i> <span data-i18n="trackBtn">استرجاع بيانات الحجز</span></button>
-        </div>
-    </main>
+nav {
+    padding: 15px 5%; background: var(--glass);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000;
+}
 
-    <section class="booking-grid" id="book-sec">
-        <div class="hospital-header-center">
-            <h2 id="current-hosp" style="margin:0; color: var(--p-dark);"></h2>
-            <small style="opacity:0.6;">المؤسسة المختارة لإجراء الفحص</small>
-        </div>
+.brand { font-size: 1.6rem; font-weight: 900; color: var(--p-color); display: flex; align-items: center; gap: 10px; }
 
-        <div class="card-service" id="c-clinic" onclick="expandForm('clinic')">
-            <i class="fas fa-user-md" style="font-size: 4rem; color: var(--s-color); margin-bottom: 20px;"></i>
-            <h3 data-i18n="clinicTitle">موعد طبيب أخصائي</h3>
-            <p data-i18n="clinicDesc">للمراجعات الدورية والفحوصات التخصصية</p>
-            
-            <div id="form-clinic" class="form-area" onclick="event.stopPropagation()">
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <input type="text" id="p-fn" data-i18n-placeholder="firstName" placeholder="الاسم">
-                    <input type="text" id="p-ln" data-i18n-placeholder="lastName" placeholder="اللقب">
-                </div>
-                <div class="input-wrap" style="margin-top:0;">
-                    <label data-i18n="nin">رقم التعريف الوطني (NIN):</label>
-                    <input type="number" id="p-nin" placeholder="أدخل الرقم المكون من 18 خانة" style="padding: 12px 15px;">
-                </div>
-                <div class="input-wrap">
-                    <label data-i18n="phone">رقم هاتف المريض:</label>
-                    <input type="tel" id="p-tel" placeholder="06XXXXXXXX" style="padding: 12px 15px;">
-                </div>
-                <select id="p-spec" style="margin: 15px 0;"></select>
-                <input type="date" id="p-date" style="margin-bottom: 20px;">
-                
-                <div class="btn-group">
-                    <button class="action-btn" onclick="confirmFinal('clinic')" style="flex:2;"><span data-i18n="confirmBtn">تثبيت الموعد</span></button>
-                    <button class="action-btn btn-cancel" onclick="resetView()" style="flex:1;">إلغاء</button>
-                </div>
-            </div>
-        </div>
+.search-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
 
-        <div class="card-service" id="c-home" onclick="expandForm('home')">
-            <i class="fas fa-house-chimney-medical" style="font-size: 4rem; color: var(--p-color); margin-bottom: 20px;"></i>
-            <h3 data-i18n="homeTitle">الرعاية المنزلية</h3>
-            <p data-i18n="homeDesc">طلب طاقم طبي لزيارة المريض في منزله</p>
-            
-            <div id="form-home" class="form-area" onclick="event.stopPropagation()">
-                <input type="text" id="h-name" data-i18n-placeholder="patientName" placeholder="الاسم الكامل للمريض" style="margin-bottom: 12px;">
-                <input type="tel" id="h-tel" data-i18n-placeholder="guardianPhone" placeholder="رقم هاتف ولي الأمر" style="margin-bottom: 12px;">
-                <textarea id="h-case" rows="3" data-i18n-placeholder="caseDesc" placeholder="وصف موجز للحالة الصحية الحالية..."></textarea>
-                <input type="text" id="h-addr" data-i18n-placeholder="address" placeholder="العنوان السكني التفصيلي" style="margin: 15px 0;">
-                
-                <div class="btn-group">
-                    <button class="action-btn" style="background: var(--p-color); flex:2;" onclick="confirmFinal('home')"><span data-i18n="submitBtn">إرسال الطلب</span></button>
-                    <button class="action-btn btn-cancel" onclick="resetView()" style="flex:1;">إلغاء</button>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+.search-card {
+    background: var(--glass); padding: 40px; border-radius: 30px;
+    width: 100%; max-width: 600px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    text-align: center;
+}
 
-<div class="fab fab-ai" onclick="toggleAI()"><i class="fas fa-robot"></i></div>
-<div class="fab fab-em" onclick="toggleEM()"><i class="fas fa-ambulance"></i></div>
+.input-wrap { position: relative; margin-top: 20px; text-align: right; }
+.input-wrap i { position: absolute; right: 18px; top: 45px; color: var(--p-color); }
 
-<div id="ai-win" class="ai-panel">
-    <div class="chat-top"><span>🤖 مساعد شفاء الذكي</span><i class="fas fa-times" onclick="toggleAI()" style="cursor:pointer;"></i></div>
-    <div class="chat-mid" id="chat-logs"><div class="bubble b-bot"></div></div>
-    <div class="chat-bottom">
-        <input type="text" id="ai-input" placeholder="اكتب سؤالك..." autocomplete="off">
-        <button onclick="askAI()" class="ai-send-btn"><i class="fas fa-paper-plane"></i></button>
-    </div>
-</div>
+input, select, textarea {
+    width: 100%; padding: 12px 45px 12px 15px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-main);
+    color: var(--text-p); font-size: 1rem; outline: none;
+}
 
-<div id="m-em" class="modal-full" onclick="toggleEM()">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <h2 style="color:var(--d-color);"><i class="fas fa-heart-pulse"></i> الاستجابة السريعة</h2>
-        <div id="tip-display" class="tip-card"></div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <a href="tel:14" class="emergency-link em-fire"><span>الحماية المدنية</span><span>14 🚒</span></a>
-            <a href="tel:115" class="emergency-link em-med"><span>الإسعاف الطبي</span><span>115 🚑</span></a>
-        </div>
-        <button onclick="toggleEM()" style="margin-top:20px; background:none; border:none; color:#888; cursor:pointer;">إغلاق</button>
-    </div>
-</div>
+.action-btn {
+    background: linear-gradient(135deg, var(--p-color), var(--s-color));
+    color: white; border: none; padding: 15px; border-radius: 12px;
+    font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
 
-<div id="m-qr" class="modal-full">
-    <div class="modal-box">
-        <h2 style="color:var(--p-color);">اكتمل الحجز بنجاح!</h2>
-        <div id="qr-target" style="display:flex; justify-content:center; margin:25px 0;"></div>
-        <p id="ref-num" style="font-weight:900; font-size:1.5rem; color:var(--s-color);"></p>
-        <button class="action-btn" style="background:var(--d-color);" onclick="location.reload()">إغلاق</button>
-    </div>
-</div>
+.btn-cancel { background: #636e72; }
+.btn-cancel:hover { background: #2d3436; }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="script.js"></script>
-</body>
-</html>
+.btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+.hosp-list { margin-top: 10px; border-radius: 10px; overflow: hidden; background: var(--bg-main); }
+.hosp-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); text-align: right; }
+.hosp-item:hover { background: var(--p-color); color: white; }
+
+.booking-grid { display: none; width: 100%; max-width: 1100px; gap: 25px; padding: 40px 20px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
+.card-service {
+    background: var(--glass); padding: 30px; border-radius: 25px; 
+    width: 350px; border: 1px solid var(--border); text-align: center; cursor: pointer;
+}
+
+.form-area { display: none; margin-top: 20px; text-align: right; border-top: 1px solid var(--border); padding-top: 20px; cursor: default; }
+
+.ai-panel {
+    position: fixed; bottom: 110px; left: 30px; width: 340px; height: 480px;
+    background: var(--glass); border-radius: 20px; display: none; flex-direction: column;
+    z-index: 9999; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid var(--p-color);
+}
+
+.chat-top { background: var(--p-color); color: white; padding: 15px; display: flex; justify-content: space-between; }
+.chat-mid { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.chat-bottom { padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+
+.bubble { padding: 10px 15px; border-radius: 15px; max-width: 85%; font-size: 0.9rem; }
+.b-bot { background: #eee; align-self: flex-start; }
+.b-user { background: var(--p-color); color: white; align-self: flex-end; }
+
+.fab { width: 60px; height: 60px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; position: fixed; bottom: 30px; z-index: 9000; }
+.fab-ai { left: 30px; background: var(--a-color); }
+.fab-em { right: 30px; background: var(--d-color); }
+
+.modal-full { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; }
+.modal-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; }
+
+.tip-card { background: var(--tip-bg); color: var(--tip-txt); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-right: 5px solid var(--p-color); }
+
+.emergency-link { text-decoration: none; display: flex; justify-content: space-between; padding: 15px; border-radius: 12px; color: white; font-weight: bold; }
+.em-fire { background: #e67e22; }
+.em-med { background: var(--d-color); }
+
+#loader { position: fixed; inset: 0; background: white; z-index: 30000; display: flex; align-items: center; justify-content: center; }
+.spin { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--p-color); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.lang-btn { width: 100%; padding: 10px; border: none; background: none; text-align: right; cursor: pointer; }
+.lang-btn:hover { background: #f0f0f0; }
