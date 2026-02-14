@@ -1,25 +1,17 @@
-// --- إعدادات الاتصال بـ Supabase ---
-// تأكد من وضع قيمك الحقيقية هنا
-// القيم المستخرجة من الصور الخاصة بك
-// الرابط المستخرج من الصورة الأولى
-// تأكد أن الرابط ينتهي بـ .co ولا يوجد بعده /
+// القيم الصحيحة كما في صورتك
 const SB_URL = "https://ughfltzaroqgqeipksb.supabase.co"; 
+const SB_KEY = "sb_publishable_jjuVXyR7sfZhrwV7KippqA_IwM62X9659A1H5pAnG9n6LCHVjPjYn85mG8z2NfD697b0a70f3f2e"; 
 
-// انسخ هذا المفتاح بالكامل كما هو (هذا هو المفتاح الظاهر في صورتك)
-const SB_KEY = "sb_publishable_jjuVXyR7sfZhrwV7KippqA_IwM62X9659A1H5pAnG9n6LCHVjPjYn85mG8z2NfD697b0a70f3f2e";
-let supabaseClient; // تم تغيير الاسم لتجنب التعارض مع اسم المكتبة
+let supabaseClient;
 
+// تعريف العميل مباشرة عند تحميل الصفحة
 function initSupabase() {
     try {
-        // محاولة الوصول للمكتبة بأكثر من طريقة لضمان التوافق
-        if (typeof window.supabase !== 'undefined') {
-            supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
-        } else if (typeof supabase !== 'undefined' && supabase.createClient) {
-            supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-        }
-        console.log("Supabase Initialized Successfully");
+        // استخدام المنادي المباشر للمكتبة
+        supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        console.log("Supabase Connected!");
     } catch (e) {
-        console.error("Supabase Init Error:", e);
+        console.error("Connection Error:", e);
     }
 }
 
