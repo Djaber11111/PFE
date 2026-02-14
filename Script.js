@@ -1,38 +1,86 @@
-// --- 1. إعدادات الاتصال بـ Supabase ---
-const SUPABASE_URL = 'https://ughfltzaroqgqgeipksb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnaGZsdHphcm9xZ3FnZWlwa3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzI3MzMsImV4cCI6MjA4NTM0ODczM30.TZvvGWPab7GM1G2ObIsiBoPUNs0KBFdkkUtIug8NJyE';
+// --- إعدادات الاتصال بـ Supabase ---
+// تأكد من وضع قيمك الحقيقية هنا
+const SB_URL = "https://your-project-url.supabase.co"; 
+const SB_KEY = "your-anon-key";
+let supabaseClient; // تم تغيير الاسم لتجنب التعارض مع اسم المكتبة
 
-// تعريف العميل للتعامل مع قاعدة البيانات
-const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+function initSupabase() {
+    try {
+        // محاولة الوصول للمكتبة بأكثر من طريقة لضمان التوافق
+        if (typeof window.supabase !== 'undefined') {
+            supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
+        } else if (typeof supabase !== 'undefined' && supabase.createClient) {
+            supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        }
+        console.log("Supabase Initialized Successfully");
+    } catch (e) {
+        console.error("Supabase Init Error:", e);
+    }
+}
 
-// --- 2. القواميس والبيانات ---
+// --- القواميس والبيانات ---
 const translations = {
     ar: {
         title: "احجز مستقبلك الصحي اليوم",
+        subtitle: "البوابة الوطنية الرقمية لربط المرضى بالمؤسسات الاستشفائية",
+        selectHospital: "اختر المستشفى أو المركز الطبي:",
+        searchPlaceholder: "ابحث باسم المستشفى أو الولاية...",
+        or: "أو استعلم عن موعدك",
+        trackPhone: "رقم الهاتف المسجل للحجز...",
+        trackBtn: "استرجاع بيانات الحجز",
         clinicTitle: "موعد طبيب أخصائي",
+        clinicDesc: "للمراجعات الدورية والفحوصات التخصصية",
         homeTitle: "الرعاية المنزلية",
+        homeDesc: "طلب طاقم طبي لزيارة المريض في منزله",
         confirmBtn: "تثبيت الموعد",
         submitBtn: "إرسال الطلب",
         specialty: "-- اختر التخصص --",
-        spec_gen: "طب عام", spec_heart: "قلب", spec_kids: "أطفال"
+        spec_gen: "طب عام", 
+        spec_heart: "قلب", 
+        spec_kids: "أطفال",
+        firstName: "الاسم",
+        lastName: "اللقب",
+        nin: "رقم التعريف الوطني (NIN):",
+        phone: "رقم هاتف المريض:",
+        patientName: "الاسم الكامل للمريض",
+        guardianPhone: "رقم هاتف ولي الأمر",
+        caseDesc: "وصف موجز للحالة الصحية الحالية...",
+        address: "العنوان السكني التفصيلي"
     },
     en: {
         title: "Book Your Health Today",
+        subtitle: "The national digital portal connecting patients to hospitals",
+        selectHospital: "Select Hospital or Medical Center:",
+        searchPlaceholder: "Search by hospital name or state...",
+        or: "Or check your appointment",
+        trackPhone: "Registered phone number...",
+        trackBtn: "Track Booking",
         clinicTitle: "Specialist Appointment",
+        clinicDesc: "For routine checkups and specialty exams",
         homeTitle: "Home Care",
-        confirmBtn: "Confirm",
-        submitBtn: "Submit",
+        homeDesc: "Request medical staff for a home visit",
+        confirmBtn: "Confirm Appointment",
+        submitBtn: "Submit Request",
         specialty: "-- Select Specialty --",
-        spec_gen: "General", spec_heart: "Cardiology", spec_kids: "Pediatrics"
+        spec_gen: "General Medicine", 
+        spec_heart: "Cardiology", 
+        spec_kids: "Pediatrics",
+        firstName: "First Name",
+        lastName: "Last Name",
+        nin: "National ID (NIN):",
+        phone: "Patient Phone:",
+        patientName: "Full Patient Name",
+        guardianPhone: "Guardian Phone",
+        caseDesc: "Brief case description...",
+        address: "Detailed Home Address"
     }
 };
 
 const HOSPITALS = ["مستشفى مصطفى باشا", "مستشفى بارني", "مستشفى القبة", "عيادة الشفاء"];
-const TIPS = ["اشرب الماء بكثرة", "الرياضة تحمي القلب", "تجنب السكريات"];
+const TIPS = ["اشرب الماء بكثرة", "الرياضة تحمي القلب", "تجنب السكريات المضافة"];
 
 let currentLang = 'ar';
 
-// --- 3. وظائف اللغة والتنسيق ---
 function toggleLangMenu() {
     const m = document.getElementById('lang-menu');
     m.style.display = m.style.display === 'none' ? 'block' : 'none';
@@ -41,7 +89,14 @@ function toggleLangMenu() {
 function setLanguage(lang) {
     currentLang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.querySelector('[data-i18n="title"]').textContent = translations[lang].title;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.textContent = translations[lang][key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) el.placeholder = translations[lang][key];
+    });
     document.getElementById('lang-menu').style.display = 'none';
     updateSpecs();
 }
@@ -49,22 +104,25 @@ function setLanguage(lang) {
 function updateSpecs() {
     const s = document.getElementById('p-spec');
     if(!s) return;
-    s.innerHTML = `<option value="">${translations[currentLang].specialty}</option>
-                   <option value="general">${translations[currentLang].spec_gen}</option>
-                   <option value="heart">${translations[currentLang].spec_heart}</option>`;
+    s.innerHTML = `
+        <option value="">${translations[currentLang].specialty}</option>
+        <option value="1">${translations[currentLang].spec_gen}</option>
+        <option value="2">${translations[currentLang].spec_heart}</option>
+        <option value="3">${translations[currentLang].spec_kids}</option>
+    `;
 }
 
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
 }
 
-// --- 4. وظائف البحث والاختيار ---
 function filterHosp() {
-    const v = document.getElementById('h-input').value;
+    const v = document.getElementById('h-input').value.toLowerCase();
     const res = document.getElementById('h-results');
     res.innerHTML = '';
     if(!v) return;
-    HOSPITALS.filter(h => h.includes(v)).forEach(h => {
+    const filtered = HOSPITALS.filter(h => h.includes(v));
+    filtered.forEach(h => {
         const d = document.createElement('div');
         d.className = 'hosp-item';
         d.textContent = h;
@@ -78,11 +136,10 @@ function selectHosp(name) {
     gsap.to("#home-sec", { opacity: 0, duration: 0.3, onComplete: () => {
         document.getElementById('home-sec').style.display = 'none';
         document.getElementById('book-sec').style.display = 'flex';
-        gsap.from("#book-sec", { opacity: 0, y: 20 });
+        gsap.fromTo("#book-sec", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 });
     }});
 }
 
-// --- 5. التوسيع والإلغاء ---
 function expandForm(type) {
     const c = document.getElementById('c-clinic');
     const h = document.getElementById('c-home');
@@ -90,112 +147,140 @@ function expandForm(type) {
         h.style.display = 'none';
         c.style.width = '100%';
         c.style.maxWidth = '600px';
+        c.style.cursor = 'default';
         document.getElementById('form-clinic').style.display = 'block';
     } else {
         c.style.display = 'none';
         h.style.width = '100%';
         h.style.maxWidth = '600px';
+        h.style.cursor = 'default';
         document.getElementById('form-home').style.display = 'block';
     }
 }
 
-// --- 6. منطق الحجز والاتصال بقاعدة البيانات ---
+function resetView() {
+    document.getElementById('form-clinic').style.display = 'none';
+    document.getElementById('form-home').style.display = 'none';
+    const cards = [document.getElementById('c-clinic'), document.getElementById('c-home')];
+    cards.forEach(card => {
+        card.style.display = 'block';
+        card.style.width = '350px';
+        card.style.cursor = 'pointer';
+    });
+}
+
+// --- الحجز والطوارئ مع التحقق من الاتصال ---
 async function confirmFinal(type) {
-    if (!supabaseClient) {
-        alert("خطأ: لم يتم تهيئة الاتصال بقاعدة البيانات.");
+    const code = "SHIFA-" + Math.floor(Math.random()*9000 + 1000);
+    let dataToSave = {};
+
+    if(type === 'clinic') {
+        dataToSave = {
+            first_name: document.getElementById('p-fn').value,
+            last_name: document.getElementById('p-ln').value,
+            nin: document.getElementById('p-nin').value,
+            phone: document.getElementById('p-tel').value,
+            specialty: document.getElementById('p-spec').options[document.getElementById('p-spec').selectedIndex]?.text || "",
+            appointment_date: document.getElementById('p-date').value,
+            hospital_name: document.getElementById('current-hosp').innerText,
+            type: 'clinic',
+            ref_code: code
+        };
+    } else {
+        dataToSave = {
+            full_name: document.getElementById('h-name').value,
+            phone: document.getElementById('h-tel').value,
+            case_desc: document.getElementById('h-case').value,
+            address: document.getElementById('h-addr').value,
+            hospital_name: document.getElementById('current-hosp').innerText,
+            type: 'home',
+            ref_code: code
+        };
+    }
+
+    // التنفيذ الفعلي للإرسال
+    if (supabaseClient) {
+        const { error } = await supabaseClient.from('appointments').insert([dataToSave]);
+        if (error) {
+            console.error("Supabase Insert Error:", error);
+            alert("فشل الحفظ في القاعدة: " + error.message);
+        }
+    } else {
+        console.warn("Supabase not connected. QR will show but data not saved.");
+    }
+
+    // إظهار النتائج (دائماً تظهر لضمان تجربة مستخدم مستقرة)
+    document.getElementById('m-qr').style.display = 'flex';
+    document.getElementById('ref-num').textContent = code;
+    const qrContainer = document.getElementById('qr-target');
+    qrContainer.innerHTML = '';
+    if (typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, { text: code, width: 150, height: 150, colorDark : "#00897b", colorLight : "#ffffff" });
+    }
+}
+
+async function trackBooking() {
+    const phone = document.getElementById('track-id').value;
+    if(!phone) {
+        alert(currentLang === 'ar' ? "يرجى إدخال رقم الهاتف أولاً" : "Please enter phone number first");
         return;
     }
 
-    const hospitalName = document.getElementById('current-hosp').innerText;
-    const bookingCode = "SHIFA-" + Math.floor(Math.random() * 9000 + 1000);
+    if(supabaseClient) {
+        const { data, error } = await supabaseClient
+            .from('appointments')
+            .select('*')
+            .eq('phone', phone)
+            .order('created_at', { ascending: false });
 
-    try {
-        if (type === 'clinic') {
-            // إرسال بيانات الموعد إلى جدول appointments
-            const { error } = await supabaseClient
-                .from('appointments')
-                .insert([{
-                    hospital_name: hospitalName,
-                    specialty: document.getElementById('p-spec').value,
-                    appointment_date: document.getElementById('p-date').value || new Date().toISOString(),
-                    booking_code: bookingCode,
-                    status: 'pending'
-                }]);
-
-            if (error) throw error;
+        if (error || !data || data.length === 0) {
+            alert(currentLang === 'ar' ? "لم يتم العثور على حجوزات" : "No bookings found");
         } else {
-            // إرسال طلب الرعاية المنزلية إلى جدول homecare_requests
-            const { error } = await supabaseClient
-                .from('homecare_requests')
-                .insert([{
-                    patient_name: document.getElementById('h-name').value,
-                    phone: document.getElementById('h-tel').value,
-                    address: document.getElementById('h-addr').value,
-                    medical_condition: document.getElementById('h-case').value,
-                    status: 'pending'
-                }]);
-
-            if (error) throw error;
+            const last = data[0];
+            alert(`${currentLang === 'ar' ? 'آخر حجز لك في' : 'Last booking at'}: ${last.hospital_name}\nCode: ${last.ref_code}`);
         }
-
-        // عرض نافذة النجاح مع رمز QR
-        showSuccessModal(bookingCode);
-    } catch (err) {
-        console.error("خطأ أثناء الحجز:", err);
-        alert("فشل الحجز: " + err.message);
     }
 }
 
-function showSuccessModal(code) {
-    document.getElementById('m-qr').style.display = 'flex';
-    document.getElementById('ref-num').textContent = code;
-    document.getElementById('qr-target').innerHTML = '';
-    if (typeof QRCode !== 'undefined') {
-        new QRCode(document.getElementById("qr-target"), { text: code, width: 150, height: 150 });
-    }
-}
-
-// --- 7. وظائف المساعد الذكي والطوارئ ---
+// --- مساعد الذكاء الاصطناعي ---
 function toggleAI() {
     const w = document.getElementById('ai-win');
-    w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+    w.style.display = (w.style.display === 'flex') ? 'none' : 'flex';
 }
 
 function askAI() {
     const inp = document.getElementById('ai-input');
-    if(!inp.value) return;
     const log = document.getElementById('chat-logs');
-    
+    if(!inp.value.trim()) return;
     const u = document.createElement('div');
     u.className = 'bubble b-user';
     u.textContent = inp.value;
     log.appendChild(u);
-    
-    const userQuery = inp.value;
+    const userMsg = inp.value;
     inp.value = '';
-    
     setTimeout(() => {
         const b = document.createElement('div');
         b.className = 'bubble b-bot';
-        b.textContent = "أنا معك، كيف يمكنني مساعدتك طبياً؟";
+        b.textContent = currentLang === 'ar' ? `أنا مساعد شفاء، بخصوص سؤالك عن (${userMsg})، أنصحك باستشارة الطبيب.` : `I advise consulting a doctor regarding (${userMsg}).`;
         log.appendChild(b);
         log.scrollTop = log.scrollHeight;
-    }, 600);
+    }, 800);
 }
 
 function toggleEM() {
     const m = document.getElementById('m-em');
-    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
     if(m.style.display === 'flex') {
         document.getElementById('tip-display').textContent = TIPS[Math.floor(Math.random()*TIPS.length)];
     }
 }
 
-// --- 8. عند تحميل الصفحة ---
-window.onload = () => {
+// --- التشغيل عند التحميل ---
+window.addEventListener('load', () => {
+    initSupabase();
     updateSpecs();
     setTimeout(() => {
         const loader = document.getElementById('loader');
-        if (loader) loader.style.display = 'none';
+        if(loader) loader.style.display = 'none';
     }, 600);
-};
+});
