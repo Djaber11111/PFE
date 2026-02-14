@@ -1,7 +1,11 @@
 // --- إعدادات الاتصال بـ Supabase ---
 // تأكد من وضع قيمك الحقيقية هنا
-const SB_URL = "https://your-project-url.supabase.co"; 
-const SB_KEY = "your-anon-key";
+// القيم المستخرجة من الصور الخاصة بك
+// الرابط المستخرج من الصورة الأولى
+const SB_URL = "https://ughfltzaroqgqeipksb.supabase.co"; 
+
+// المفتاح المستخرج من الصورة الثانية (Publishable key)
+const SB_KEY = "sb_publishable_jjuVXyR7sfZhrwV7KippqA_IwM62X9659A1H5pAnG9n6LCHVjPjYn85mG8z2NfD697b0a70f3f2e";
 let supabaseClient; // تم تغيير الاسم لتجنب التعارض مع اسم المكتبة
 
 function initSupabase() {
